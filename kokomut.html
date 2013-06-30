@@ -13,7 +13,16 @@
 </body>
 
 <template name="hello">
-<h1 style="font-size:5em">Kokomut</h1>
+<div style="float: left">
+    <h1 style="font-size:5em">Kokomut</h1>
+    <p class="lead">"All your email <i>*not*</i> about web RTC!</p>
+</div>
+<div style="float:right">
+  <img src="http://www.clker.com/cliparts/8/V/Y/g/s/v/coconut-organic-surf-wax-hi.png"
+  height="175px" width="175px" />
+</div>
+<div style="clear:both"></div>
+
 {{#if isLoggedIn}}
 {{> statsHero}}
 {{> messageCards}}
@@ -25,8 +34,9 @@
 <template name="statsHero">
 <div class="well row">
     {{#each stats}}
-        <h3>Number emails:{{numEmails}}</h3>
-        <h3>Mean length of email:{{meanLength}}</h3>
+    <p class="lead" style="float:right;">Email me at <i><a href="mailto:kokomut123@gmail.com">kokomut123@gmail.com</a>!</i></p>
+        <h3>Number emails: {{numEmails}}</h3>
+        <h3>Mean length of email: {{meanLength}}</h3>
     {{/each}}
 </div>
 </template>
@@ -36,7 +46,7 @@
     <div class="container">
         <div class="backlog">
             {{#each messages}}
-                <div class="well tile">
+                <div class="tile" style="border-radius: 5px;">
                     {{#if body}}
                     <h3>{{author}} {{subject}}</h3>
                         {{#if body.image}}
