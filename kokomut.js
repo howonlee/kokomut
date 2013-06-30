@@ -9,29 +9,38 @@ if (Meteor.isClient) {
         return Meteor.userId() !== undefined;
     }
 
-    Template.hello.greeting = function(){
-        if (Meteor.user()){
-            return "Welcome to meteordesk, " + Meteor.user().profile.name + ".";
-        }
-    };
+    Template.messageCards.messages = function(){
+        msgs = Messages.find({}, {sort: {"timestamp" : -1}});
+        console.log(msgs);
 
-    Template.messageList.messages = function(){
-        return Messages.find({}, {sort: {"timestamp" : -1}});
+        return msgs;
     };
 
 }
 
 Meteor.methods({
-    addEmail: function(seqno, uid, author, subject, body){
+    addEmail: function(from, subject, body){
+                  //pull in regexes here, structure the body
                   Messages.insert({
-                  "msgno": seqno,
-                  "uid": uid,
-                  "author": author,
+                  "from": from,
                   "subject": subject,
-                  "body": body,
+                  "body": Meteor.call("processBody", body),
                   "timestamp": new Date().getTime()
                   });
-              }
+              },
+
+    processBody: function(body){
+                     var bodyProcessed = body.replace(/--[0-9a-f]{28}--/g, '');
+                     var bodyProcessed = body.replace(/--[0-9a-f]{28}/g, '');
+                     var bodyHTMLStart = bodyProcessed.indexOf('text/html;', '');
+                     var bodyHTMLString = bodyProcessed.substring(bodyHTMLStart + 25);
+                     var bodyTextString = bodyProcessed.substring(0, bodyHTMLStart - 14);
+                     var bodyObj = {};
+                     bodyObj.text = bodyTextString;
+                     bodyObj.html = bodyHTMLString;
+                     console.log(bodyObj);
+                     return bodyObj;
+                }
 });
 
 function show(obj){
@@ -40,8 +49,10 @@ function show(obj){
 
 if (Meteor.isServer){
     var require = Npm.require;
-    var imap = require('imap');
     var Fiber = require('fibers');
+    var imap = require('imap');
+    var MailParser = require('mailparser').MailParser;
+    var mailparser = new MailParser();
 
     Meteor.startup(function fetch(){
         mailConnection = new imap.ImapConnection({
@@ -49,8 +60,16 @@ if (Meteor.isServer){
             password: 'deliciousdelicious',
             host: 'imap.gmail.com',
             port: 993,
-            secure: true
+            secure: true,
         });
+
+        mailparser.on("end", function(mail_object){
+            console.log(mail_object);
+            Fiber(function(){
+                Meteor.call("addEmail", mail_object.headers.from, mail_object.headers.subject, mail_object.text);
+            }).run();
+        });
+
         mailConnection.connect(function(err){
             console.log("begin mail connection");
             if (err){ console.log(err); }
@@ -73,19 +92,13 @@ if (Meteor.isServer){
                                     console.log("got a message");
                                     var body = "";
                                     msg.on("data", function(chunk){
-                                        body += chunk.toString('utf8');
+                                        body += chunk.toString();
                                     });
                                     msg.on("end", function(){
-                                        console.log(msg);
                                         var email = msg[']'];
-                                        var authPos = email.search("\n");
-                                        var subject = email.substr(9, authPos - 9);
-                                        email = email.substr(authPos + 1);
-                                        var toPos = email.search("\n");
-                                        var author = email.substr(6, toPos - 6);
-                                        Fiber(function(){
-                                            Meteor.call("addEmail", msg.seqno, msg.uid, author, subject, body);
-                                        }).run();
+                                        email = email + body;
+                                        mailparser.write(email);
+                                        mailparser.end();
                                     });
                                 });
                             }

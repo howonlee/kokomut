@@ -15,15 +15,18 @@
 <template name="hello">
 <h1>MeteorDesk</h1>
 {{#if isLoggedIn}}
-{{greeting}}
-{{> messageList}}
-{{> sendMessage}}
+{{> statsHero}}
+{{> messageCards}}
 {{else}}
 <h2>Please log in first</h2>
 {{/if}}
 </template>
 
-<template name="messageList">
+<template name="statsHero">
+
+</template>
+
+<template name="messageCards">
 <h1>Messages:</h1>
 <ul>
     {{#each messages}}
@@ -37,11 +40,4 @@
     {{/if}}
     {{/each}}
 </ul>
-</template>
-
-<template name="sendMessage">
-<form action="javascript:void(0)">
-    <input id="newMessage" />
-    <button type="submit">Send</button>
-</form>
 </template>
