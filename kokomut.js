@@ -1,4 +1,5 @@
 var Messages = new Meteor.Collection("messages");
+var Stats = new Meteor.Collection("stats");
 
 if (Meteor.isClient) {
     Accounts.ui.config({
@@ -12,22 +13,44 @@ if (Meteor.isClient) {
     Template.messageCards.messages = function(){
         msgs = Messages.find({}, {sort: {"timestamp" : -1}});
         console.log(msgs);
-
         return msgs;
     };
+
+    Template.statsHero.stats = function(){
+        stats = Stats.find({}, {sort: {"timestamp" : -1}});
+        console.log(stats);
+        return stats;
+    };
+
+    Meteor.startup(function(){
+        Meteor.call("statsRefresh");
+    });
 
 }
 
 Meteor.methods({
     addEmail: function(from, subject, body){
-                  //pull in regexes here, structure the body
                   Messages.insert({
                   "from": from,
                   "subject": subject,
                   "body": Meteor.call("processBody", body),
                   "timestamp": new Date().getTime()
+                  }, function(){
+                      Meteor.call("statsRefresh");
                   });
               },
+
+    statsRefresh: function(){
+                   Stats.remove({});
+                   var totalLength = 0;
+                   Messages.find({}).forEach(function(message){
+                       totalLength += message.body.text.length;
+                   });
+                   Stats.insert({
+                       numEmails: Messages.find({}).count(),
+                       meanLength: Math.ceil(totalLength / Messages.find({}).count())
+                   });
+               },
 
     processBody: function(body){
                      var bodyProcessed = body.replace(/--[0-9a-f]{28}--/g, '');
@@ -38,7 +61,7 @@ Meteor.methods({
                      var bodyObj = {};
                      bodyObj.text = bodyTextString;
                      bodyObj.html = bodyHTMLString;
-                     bodyObj.htmlshow = bodyHTMLString.substring(0, 800);
+                     bodyObj.textshow = bodyTextString.substring(0, 300);
                      console.log(bodyObj);
                      return bodyObj;
                 },
