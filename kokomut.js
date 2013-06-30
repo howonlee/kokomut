@@ -54,7 +54,8 @@ if (Meteor.isServer){
     var MailParser = require('mailparser').MailParser;
     var mailparser = new MailParser();
 
-    Meteor.startup(function fetch(){
+            
+    function getMail(){
         mailConnection = new imap.ImapConnection({
             username: 'kokomut123@gmail.com',
             password: 'deliciousdelicious',
@@ -77,9 +78,6 @@ if (Meteor.isServer){
                 mailConnection.openBox('INBOX', false, function(err, mailbox){
                     console.log("opening box... ");
                     if (err) { console.log(err); }
-                    mailConnection.on('mail', function(){
-                        console.log("NEW MAIL");
-                    });
                     mailConnection.search(['UNSEEN', ['SINCE', 'June 10, 2013']], function(err, results){
                         console.log("starting unseen message search...");
                         if (err) { console.log(err); }
@@ -88,12 +86,13 @@ if (Meteor.isServer){
                             headers: ['from', 'to', 'subject'],
                             body: true,
                             cb: function(fetch){
-                                return function(fetch) {
                                     fetch.on('message', function(msg){
+                                        console.log("hi everybody");
                                         console.log("got a message");
-                                        var body = "";
+                                        body = "";
                                         msg.on("data", function(chunk){
                                             body += chunk.toString();
+                                            console.log(body);
                                         });
                                         msg.on("end", function(){
                                             var email = msg[']'];
@@ -102,7 +101,6 @@ if (Meteor.isServer){
                                             mailparser.end();
                                         });
                                     });
-                                };
                             }
                         }, function(err){
                             if (err) throw err;
@@ -127,6 +125,9 @@ if (Meteor.isServer){
                 });
             }
         });
-    });
+    };
+
+    Meteor.startup(getMail);
+    Meteor.setInterval(getMail, 4000);
 
 }
