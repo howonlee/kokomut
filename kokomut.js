@@ -27,54 +27,52 @@ if (Meteor.isServer){
 
     Meteor.startup(function fetch(){
         mailConnection = new imap.ImapConnection({
-            username: 'kokomut123',
+            username: 'kokomut123@gmail.com',
             password: 'deliciousdelicious',
             host: 'imap.gmail.com',
             port: 993,
             secure: true
         });
         mailConnection.connect(function(err){
+            console.log("begin mail connection");
             if (err){ console.log(err); }
             else {
-                mailConnection.openBox('INBOX', false, function(err, mailbox){
+                mailConnection.openBox('INBOX', true, function(err, mailbox){
+                    console.log("opening box... ");
                     if (err) { console.log(err); }
                     mailConnection.on('mail', function(){
                         console.log("NEW MAIL");
                     });
-                    mailConnection.search(['UNSEEN'], function(err, results){
+                    mailConnection.search(['UNSEEN', ['SINCE', 'June 10, 2013']], function(err, results){
+                        console.log("starting unseen message search...");
                         if (err) { console.log(err); }
-                        try {
-                            var fetch = mailConnection.fetch(results, {
-                                request: {
-                                             headers: ['from', 'to', 'subject'],
-                                             body: true
-                                         },
-                                markSeen: true
-                            });
-                            fetch.on('message' function(msg){
-                                var body = "";
-                                msg.on("data", function(chunk){
-                                    body += chunk.toString("utf8");
+                        mailConnection.fetch(results, {
+                            headers: ['from', 'to', 'subject'],
+                            body: true,
+                            cb: function(fetch){
+                                fetch.on('message', function(msg){
+                                    console.log("got a message");
+                                    var body = "";
+                                    msg.on("data", function(chunk){
+                                        body += chunk.toString("utf8");
+                                    });
+                                    msg.on("end", function(){
+                                        Fiber(function(){
+                                            Messages.insert({
+                                                "author": msg.headers.from[0],
+                                                "subject": msg.headers.subject[0],
+                                                "body": body,
+                                                "timestamp": new Date().getTime()
+                                            });
+                                        }).run();
+                                    });
                                 });
-                                msg.on("end", function(){
-                                    Fiber(function(){
-                                        Messages.insert({
-                                            "author": msg.headers.from[0],
-                                            "subject": msg.headers.subject[0],
-                                            "body": body,
-                                            "timestamp": new Date().getTime()
-                                        });
-                                    }).run();
-                                });
-                            });
-                            fetch.on('end', function(){
-                                console.log("fetch done");
-                                mailConnection.logout();
-                            });
-                        } catch(e){
+                            }
+                        }, function(err){
+                            if (err) throw err;
+                            console.log("done with all messages");
                             mailConnection.logout();
-                            return;
-                        }
+                        });
                     });
                 });
             }
