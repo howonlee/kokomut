@@ -10,7 +10,7 @@ $(document).ready(function() {
 });
 
 var windowResized = function () {
-  console.log("happend");
+  console.log("happend" + getNumColumns());
   if (getNumColumns() !== n_current_columns) {
     placeTiles();
   }
