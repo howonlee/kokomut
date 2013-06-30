@@ -5,11 +5,8 @@ var column_cursors = new Array();
 
 var array;
 $(function() {
-  main();
-  placeTiles();
   window.onresize = windowResized;
-
-
+  windowResized();
 });
 
 var windowResized = function () {
@@ -17,14 +14,6 @@ var windowResized = function () {
   if (getNumColumns() !== n_current_columns) {
     placeTiles();
   }
-}
-
-
-
-function main() {
-  $('.tile').each(function(index) {
-    $(this).height(Math.floor(Math.random()*4) * 60 + 60);
-  });
 }
 
 function setBacklogSize() {
