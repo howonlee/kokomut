@@ -1,0 +1,47 @@
+<head>
+    <title>meteordesk</title>
+    <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.1/themes/base/jquery-ui.css" />
+    <script src="http://code.jquery.com/jquery-1.8.2.js"></script>
+    <script src="http://code.jquery.com/ui/1.9.1/jquery-ui.js"></script>  
+</head>
+
+<body>
+    <div class="wrap">
+        <p style="float:right;clear:both;">{{loginButtons align="right"}}</p>
+        {{> hello}}
+    </div>
+</body>
+
+<template name="hello">
+<h1>MeteorDesk</h1>
+{{#if isLoggedIn}}
+{{greeting}}
+{{> messageList}}
+{{> sendMessage}}
+{{else}}
+<h2>Please log in first</h2>
+{{/if}}
+</template>
+
+<template name="messageList">
+<h1>Messages:</h1>
+<ul>
+    {{#each messages}}
+    {{#if body}}
+    <li class="collapsible">
+    <h3>{{author}} {{subject}}</h3>
+                                                                                                                <div><pre>{{body}}</pre></div>
+    </li>
+    {{else}}
+    <li><strong>{{author}}</strong>: {{subject}}</li>
+    {{/if}}
+    {{/each}}
+</ul>
+</template>
+
+<template name="sendMessage">
+<form action="javascript:void(0)">
+    <input id="newMessage" />
+    <button type="submit">Send</button>
+</form>
+</template>
