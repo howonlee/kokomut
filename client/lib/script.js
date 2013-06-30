@@ -3,10 +3,10 @@ var spacing = 20;
 var n_current_columns; 
 var column_cursors = new Array();
 
-$(document).ready(function() {
+Meteor.setTimeout(function() {
   window.onresize = windowResized;
   windowResized();
-});
+}, 400);
 
 var windowResized = function () {
   console.log("happened " + getNumColumns());

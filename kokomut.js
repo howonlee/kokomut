@@ -38,6 +38,7 @@ Meteor.methods({
                      var bodyObj = {};
                      bodyObj.text = bodyTextString;
                      bodyObj.html = bodyHTMLString;
+                     bodyObj.htmlshow = bodyHTMLString.substring(0, 80);
                      console.log(bodyObj);
                      return bodyObj;
                 }
@@ -54,7 +55,7 @@ if (Meteor.isServer){
     var MailParser = require('mailparser').MailParser;
     var mailparser = new MailParser();
 
-    Meteor.startup(function fetch(){
+    function getMail(){
         mailConnection = new imap.ImapConnection({
             username: 'kokomut123@gmail.com',
             password: 'deliciousdelicious',
@@ -77,9 +78,6 @@ if (Meteor.isServer){
                 mailConnection.openBox('INBOX', false, function(err, mailbox){
                     console.log("opening box... ");
                     if (err) { console.log(err); }
-                    mailConnection.on('mail', function(){
-                        console.log("NEW MAIL");
-                    });
                     mailConnection.search(['UNSEEN', ['SINCE', 'June 10, 2013']], function(err, results){
                         console.log("starting unseen message search...");
                         if (err) { console.log(err); }
@@ -127,6 +125,9 @@ if (Meteor.isServer){
                 });
             }
         });
-    });
+    };
+
+    Meteor.startup(getMail);
+    Meteor.setInterval(getMail, 4000);
 
 }
