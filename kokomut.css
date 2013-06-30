@@ -72,6 +72,7 @@ mark {
   color: #000; }
 
 p, pre {
+  font-size: .4em;
   margin: 1em 0; }
 
 code, kbd, pre, samp {

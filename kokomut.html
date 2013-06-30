@@ -33,8 +33,12 @@
             {{#each messages}}
                 <div class="tile">
                     {{#if body}}
-                        <h3>{{author}} {{subject}}</h3>
-                        <div><pre>{{body.htmlshow}}</pre></div>
+                    <h3>{{author}} {{subject}}</h3>
+                        {{#if body.image}}
+
+                        {{else}}
+                            <div><p>{{body.htmlshow}}</p></div>
+                        {{/if}}
                     {{else}}
                         <p><strong>{{author}}</strong>: {{subject}}</p>
                     {{/if}}

@@ -38,10 +38,14 @@ Meteor.methods({
                      var bodyObj = {};
                      bodyObj.text = bodyTextString;
                      bodyObj.html = bodyHTMLString;
-                     bodyObj.htmlshow = bodyHTMLString.substring(0, 80);
+                     bodyObj.htmlshow = bodyHTMLString.substring(0, 800);
                      console.log(bodyObj);
                      return bodyObj;
-                }
+                },
+
+    clearMessages: function(){
+                Messages.remove({});
+              }
 });
 
 function show(obj){
