@@ -70,8 +70,9 @@ if (Meteor.isServer){
                             cb: function(fetch){
                                 fetch.on('message', function(msg){
                                     console.log("got a message");
-                                    msg.on("header", function(hdrs){
-                                        console.log("msg" + msg.seqno + ": " + show(hdrs));
+                                    var body = "";
+                                    msg.on("data", function(chunk){
+                                        body += chunk.toString('utf8');
                                     });
                                     msg.on("end", function(){
                                         console.log(msg);
@@ -81,9 +82,6 @@ if (Meteor.isServer){
                                         email = email.substr(authPos + 1);
                                         var toPos = email.search("\n");
                                         var author = email.substr(6, toPos - 6);
-                                        email = email.substr(toPos + 1);
-                                        var bodyPos = email.search("\n");
-                                        body = email.substr(bodyPos + 1);
                                         Fiber(function(){
                                             Meteor.call("addEmail", msg.seqno, msg.uid, author, subject, body);
                                         }).run();
