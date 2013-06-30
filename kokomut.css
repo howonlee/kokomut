@@ -191,6 +191,7 @@ body {
   padding: 50px; }
 
 .container {
+  width: 100%;
   background: #F9F9F9;
   min-height: 10px; }
 
