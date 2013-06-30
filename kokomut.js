@@ -21,9 +21,27 @@ if (Meteor.isClient) {
 
 }
 
+Meteor.methods({
+    addEmail: function(seqno, uid, author, subject, body){
+                  Messages.insert({
+                  "msgno": seqno,
+                  "uid": uid,
+                  "author": author,
+                  "subject": subject,
+                  "body": body,
+                  "timestamp": new Date().getTime()
+                  });
+              }
+});
+
+function show(obj){
+    return inspect(obj, false, Infinity);
+}
+
 if (Meteor.isServer){
     var require = Npm.require;
     var imap = require('imap');
+    var Fiber = require('fibers');
 
     Meteor.startup(function fetch(){
         mailConnection = new imap.ImapConnection({
@@ -52,18 +70,22 @@ if (Meteor.isServer){
                             cb: function(fetch){
                                 fetch.on('message', function(msg){
                                     console.log("got a message");
-                                    var body = "";
-                                    msg.on("data", function(chunk){
-                                        body += chunk.toString("utf8");
+                                    msg.on("header", function(hdrs){
+                                        console.log("msg" + msg.seqno + ": " + show(hdrs));
                                     });
                                     msg.on("end", function(){
+                                        console.log(msg);
+                                        var email = msg[']'];
+                                        var authPos = email.search("\n");
+                                        var subject = email.substr(9, authPos - 9);
+                                        email = email.substr(authPos + 1);
+                                        var toPos = email.search("\n");
+                                        var author = email.substr(6, toPos - 6);
+                                        email = email.substr(toPos + 1);
+                                        var bodyPos = email.search("\n");
+                                        body = email.substr(bodyPos + 1);
                                         Fiber(function(){
-                                            Messages.insert({
-                                                "author": msg.headers.from[0],
-                                                "subject": msg.headers.subject[0],
-                                                "body": body,
-                                                "timestamp": new Date().getTime()
-                                            });
+                                            Meteor.call("addEmail", msg.seqno, msg.uid, author, subject, body);
                                         }).run();
                                     });
                                 });
