@@ -55,7 +55,7 @@ if (Meteor.isServer){
             console.log("begin mail connection");
             if (err){ console.log(err); }
             else {
-                mailConnection.openBox('INBOX', true, function(err, mailbox){
+                mailConnection.openBox('INBOX', false, function(err, mailbox){
                     console.log("opening box... ");
                     if (err) { console.log(err); }
                     mailConnection.on('mail', function(){
@@ -64,6 +64,7 @@ if (Meteor.isServer){
                     mailConnection.search(['UNSEEN', ['SINCE', 'June 10, 2013']], function(err, results){
                         console.log("starting unseen message search...");
                         if (err) { console.log(err); }
+                        try{
                         mailConnection.fetch(results, {
                             headers: ['from', 'to', 'subject'],
                             body: true,
@@ -91,6 +92,20 @@ if (Meteor.isServer){
                         }, function(err){
                             if (err) throw err;
                             console.log("done with all messages");
+                            mailConnection.logout();
+                        });
+                        } catch(e)
+                        {
+                            console.log(e);
+                            mailConnection.logout();
+                        }
+                    });
+                    mailConnection.search(['UNSEEN', ['SINCE', 'June 10, 2013']], function(err, results){
+                        console.log("adding seen flag to messages...");
+                        if (err) { console.log(err); }
+                        mailConnection.addFlags(results, 'SEEN', function(err){
+                            if (err) throw err;
+                            console.log("done with adding flag to messages");
                             mailConnection.logout();
                         });
                     });
