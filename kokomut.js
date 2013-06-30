@@ -88,19 +88,21 @@ if (Meteor.isServer){
                             headers: ['from', 'to', 'subject'],
                             body: true,
                             cb: function(fetch){
-                                fetch.on('message', function(msg){
-                                    console.log("got a message");
-                                    var body = "";
-                                    msg.on("data", function(chunk){
-                                        body += chunk.toString();
+                                return function(fetch) {
+                                    fetch.on('message', function(msg){
+                                        console.log("got a message");
+                                        var body = "";
+                                        msg.on("data", function(chunk){
+                                            body += chunk.toString();
+                                        });
+                                        msg.on("end", function(){
+                                            var email = msg[']'];
+                                            email = email + body;
+                                            mailparser.write(email);
+                                            mailparser.end();
+                                        });
                                     });
-                                    msg.on("end", function(){
-                                        var email = msg[']'];
-                                        email = email + body;
-                                        mailparser.write(email);
-                                        mailparser.end();
-                                    });
-                                });
+                                };
                             }
                         }, function(err){
                             if (err) throw err;
