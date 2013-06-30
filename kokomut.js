@@ -53,7 +53,6 @@ if (Meteor.isServer){
     var Fiber = require('fibers');
     var imap = require('imap');
     var MailParser = require('mailparser').MailParser;
-    var mailparser = new MailParser();
 
     function getMail(){
         mailConnection = new imap.ImapConnection({
@@ -62,13 +61,6 @@ if (Meteor.isServer){
             host: 'imap.gmail.com',
             port: 993,
             secure: true,
-        });
-
-        mailparser.on("end", function(mail_object){
-            console.log(mail_object);
-            Fiber(function(){
-                Meteor.call("addEmail", mail_object.headers.from, mail_object.headers.subject, mail_object.text);
-            }).run();
         });
 
         mailConnection.connect(function(err){
@@ -86,21 +78,26 @@ if (Meteor.isServer){
                             headers: ['from', 'to', 'subject'],
                             body: true,
                             cb: function(fetch){
-                                return function(fetch) {
-                                    fetch.on('message', function(msg){
-                                        console.log("got a message");
-                                        var body = "";
-                                        msg.on("data", function(chunk){
-                                            body += chunk.toString();
-                                        });
-                                        msg.on("end", function(){
-                                            var email = msg[']'];
-                                            email = email + body;
-                                            mailparser.write(email);
-                                            mailparser.end();
-                                        });
+                                fetch.once('message', function(msg){
+                                    console.log("got a message");
+                                    var body = "";
+                                    var mailparser = new MailParser();
+                                    msg.on("data", function(chunk){
+                                        body += chunk.toString();
                                     });
-                                };
+                                    msg.once("end", function(){
+                                        var email = msg[']'];
+                                        email = email + body;
+                                        mailparser.write(email);
+                                        mailparser.end();
+                                    });
+                                    mailparser.once("end", function(mail_object){
+                                        console.log(mail_object);
+                                        Fiber(function(){
+                                            Meteor.call("addEmail", mail_object.headers.from, mail_object.headers.subject, mail_object.text);
+                                        }).run();
+                                    });
+                                });
                             }
                         }, function(err){
                             if (err) throw err;
@@ -119,13 +116,15 @@ if (Meteor.isServer){
                         mailConnection.addFlags(results, 'SEEN', function(err){
                             if (err) throw err;
                             console.log("done with adding flag to messages");
-                            mailConnection.logout();
                         });
                     });
                 });
             }
         });
     };
+
+    function setSeen(mailConnection){
+    }
 
     Meteor.startup(getMail);
     Meteor.setInterval(getMail, 4000);
