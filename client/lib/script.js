@@ -8,6 +8,10 @@ Meteor.setTimeout(function() {
   windowResized();
 }, 400);
 
+Meteor.setInterval(function() {
+  placeTiles();
+}, 1000);
+
 var windowResized = function () {
   console.log("happened " + getNumColumns());
   if (getNumColumns() !== n_current_columns) {
