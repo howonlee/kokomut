@@ -3,14 +3,13 @@ var spacing = 20;
 var n_current_columns; 
 var column_cursors = new Array();
 
-var array;
 $(document).ready(function() {
   window.onresize = windowResized;
   windowResized();
 });
 
 var windowResized = function () {
-  console.log("happend" + getNumColumns());
+  console.log("happened " + getNumColumns());
   if (getNumColumns() !== n_current_columns) {
     placeTiles();
   }
