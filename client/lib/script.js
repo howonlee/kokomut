@@ -4,7 +4,7 @@ var n_current_columns;
 var column_cursors = new Array();
 
 var array;
-$.ready(function() {
+$(document).ready(function() {
   window.onresize = windowResized;
   windowResized();
 });
